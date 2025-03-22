@@ -16,6 +16,7 @@
         background-color: black;
         image-rendering: pixelated;
         scrollbar-width: none;
+        position: relative; /* Make body relative for absolute positioning of controls */
       }
       ::-webkit-scrollbar {
         display: none;
@@ -31,12 +32,84 @@
         width: 100vw;
         height: 100vh;
       }
+
+      .contenedor-control {
+        position: absolute; /* Position controls absolutely */
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: center; /* Center controls horizontally */
+        align-items: center; /* Vertically align items if needed */
+        padding-bottom: 20px;  /* Add some padding at the bottom */
+        z-index: 100; /* Ensure controls are above the canvas */
+        gap: 10px;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+
+      .boton {
+        width: 60px;
+        height: 60px;
+        background-color: #4caf50;
+        color: white;
+        text-align: center;
+        line-height: 60px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+        touch-action: manipulation;
+      }
+
+      .c-stick {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+      }
+
+      .c-stick-row {
+        display: flex;
+      }
+
+      .palanca {
+        width: 40px;
+        height: 40px;
+        background-color: #333;
+        border-radius: 50%;
+      }
+
+      .botones-accion {
+        display: flex;
+        gap: 10px;
+      }
+
     </style>
   </head>
   <body>
     <div id="container">
       <canvas class="emscripten" id="canvas"></canvas>
     </div>
+
+    <div class="contenedor-control">
+      <div class="c-stick">
+        <div class="c-stick-row">
+          <div class="boton" data-tecla="w">W</div>
+        </div>
+        <div class="c-stick-row">
+          <div class="boton" data-tecla="a">A</div>
+          <div class="boton" data-tecla="s">S</div>
+          <div class="boton" data-tecla="d">D</div>
+        </div>
+      </div>
+      <div class="boton" data-tecla="Enter">Inicio</div>
+      <div class="botones-accion">
+        <div class="boton" data-tecla="x">X</div>
+        <div class="boton" data-tecla="c">C</div>
+        <div class="boton" data-tecla="q">Q</div>
+      </div>
+    </div>
+
     <script type='text/javascript'>
       var Module = {
         preRun: [],
@@ -54,7 +127,7 @@
         },
         canvas: (function() {
           var canvas = document.getElementById('canvas');
-          canvas.width = window.innerWidth; // Todo: how to do this from c++
+          canvas.width = window.innerWidth;
           canvas.height = window.innerHeight;
           canvas.addEventListener("webglcontextlost", function(e) {
             alert('WebGL context lost. You will need to reload the page.');
@@ -65,12 +138,55 @@
         setStatus: function(text) {
         }
       };
+
+      const botones = document.querySelectorAll(".boton");
+      const canvasElement = document.getElementById("canvas");
+
+      const keyMap = {
+        "Enter": 13,
+        "w": 87,
+        "a": 65,
+        "s": 83,
+        "d": 68,
+        "x": 88,
+        "c": 67,
+        "q": 81,
+      };
+
+      function simulateKeyEvent(type, keyCode) {
+        const event = new KeyboardEvent(type, {
+          keyCode: keyCode,
+          which: keyCode,
+          key: String.fromCharCode(keyCode),
+          code: `Key${String.fromCharCode(keyCode).toUpperCase()}`,
+          bubbles: true,
+        });
+        canvasElement.dispatchEvent(event);
+      }
+
+      botones.forEach((boton) => {
+        boton.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          const tecla = boton.dataset.tecla;
+          const keyCode = keyMap[tecla];
+          if (keyCode) {
+            simulateKeyEvent("keydown", keyCode);
+            console.log("Tecla presionada:", tecla, keyCode);
+          }
+        });
+
+        boton.addEventListener("touchend", (e) => {
+          e.preventDefault();
+          const tecla = boton.dataset.tecla;
+          const keyCode = keyMap[tecla];
+          if (keyCode) {
+            simulateKeyEvent("keyup", keyCode);
+            console.log("Tecla liberada:", tecla, keyCode);
+          }
+        });
+      });
+
     </script>
     <script async type="text/javascript" src="sm64.us.f3dex2e.js"></script>
-    <script>
-    </script>
   </body>
 </html>
-
-
-
